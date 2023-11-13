@@ -5,17 +5,20 @@ using UnityEngine;
 public class Elevator : MonoBehaviour
 {
     public float elevatorSpeed = 2f;
+    public float returnSpeed = 1f;  // Prêdkoœæ powrotu do pocz¹tkowej pozycji
     private bool isRunning = false;
     public float distance = 6.6f;
     private bool isRunningUp = true;
     private bool isRunningDown = false;
     private float downPosition;
     private float upPosition;
+    private Vector3 initialPosition;
 
     void Start()
     {
         upPosition = transform.position.y + distance;
         downPosition = transform.position.y;
+        initialPosition = transform.position;
     }
 
     void Update()
@@ -23,10 +26,12 @@ public class Elevator : MonoBehaviour
         if (isRunningUp && transform.position.y >= upPosition)
         {
             isRunning = false;
+            StartCoroutine(ReturnToInitialPosition());
         }
         else if (isRunningDown && transform.position.y <= downPosition)
         {
             isRunning = false;
+            StartCoroutine(ReturnToInitialPosition());
         }
 
         if (isRunning)
@@ -34,6 +39,25 @@ public class Elevator : MonoBehaviour
             Vector3 move = transform.up * elevatorSpeed * Time.deltaTime;
             transform.Translate(move);
         }
+    }
+
+    IEnumerator ReturnToInitialPosition()
+    {
+        float elapsedTime = 0f;
+        Vector3 currentPosition = transform.position;
+
+        while (elapsedTime < 1f)
+        {
+            transform.position = Vector3.Lerp(currentPosition, initialPosition, elapsedTime);
+            elapsedTime += Time.deltaTime * returnSpeed;
+            yield return null;
+        }
+
+        // Ustawienie dok³adnej pozycji na koniec interpolacji
+        transform.position = initialPosition;
+        elevatorSpeed = Mathf.Abs(elevatorSpeed); // Resetowanie prêdkoœci
+        isRunningUp = true;
+        isRunningDown = false;
     }
 
     private void OnTriggerEnter(Collider other)
